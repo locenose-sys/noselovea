@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Shop Broadcast Console</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --text:#e8eaf0; --muted:#8b93a5; --accent:#4c8dff; --good:#35c27a; --warn:#f2b64a; --bad:#ef5b5b;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){--bg:#f4f5f8;--panel:#fff;--panel2:#f0f2f6;--line:#d9dde6;--text:#14171f;--muted:#5f677a;}
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:16px 16px 48px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:20px;margin:0}
+  .status{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+  .pill.on{color:var(--good);border-color:var(--good)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}.span2{grid-column:span 2}}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  h2{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  textarea,input[type=text],input[type=time],input[type=number],select{
+    width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+  textarea{min-height:92px;resize:vertical}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row>*{flex:0 0 auto}
+  .grow{flex:1 1 140px!important}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer;min-height:44px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+  button.ghost{background:transparent}
+  button[aria-pressed=true]{border-color:var(--good);color:var(--good)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-size:13px;padding:6px 10px;min-height:0;border-radius:99px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  video{width:100%;background:#000;border-radius:10px;aspect-ratio:16/9;display:block}
+  .note{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .log{max-height:150px;overflow:auto;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+  .log div{padding:2px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+  td.t{width:76px;font-variant-numeric:tabular-nums}
+  .sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📣 Shop Broadcast Console</h1>
+    <div class="status">
+      <span class="pill" id="pSpeak">Idle</span>
+      <span class="pill" id="pAwake">Screen: normal</span>
+      <span class="pill" id="pSched">Schedule: off</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ANNOUNCE -->
+    <section class="span2">
+      <h2>Announcement</h2>
+      <label for="msg">Message</label>
+      <textarea id="msg" placeholder="Type what the speaker should say…"></textarea>
+      <div class="chips" id="presets"></div>
+
+      <div class="three" style="margin-top:6px">
+        <div><label for="vol">Volume <span id="volV"></span></label><input type="range" id="vol" min="0" max="1" step="0.05" value="1"></div>
+        <div><label for="rate">Speed <span id="rateV"></span></label><input type="range" id="rate" min="0.5" max="1.6" step="0.05" value="0.95"></div>
+        <div><label for="pitch">Pitch <span id="pitchV"></span></label><input type="range" id="pitch" min="0.5" max="1.6" step="0.05" value="1"></div>
+      </div>
+      <div class="two">
+        <div><label for="voice">Voice (Hindi / Bengali / English depends on your device)</label><select id="voice"></select></div>
+        <div><label for="chime">Chime before speaking</label>
+          <select id="chime"><option value="ding">Soft ding-dong</option><option value="none">None</option><option value="attention">Attention</option></select></div>
+      </div>
+
+      <p class="note" id="voiceStatus"></p>
+      <label class="row" style="margin:8px 0 0;color:var(--text);font-size:14px"><input type="checkbox" id="online"> Use online voice (Google) when this device has no Hindi/Bengali voice</label>
+      <p class="note">Online voice is an unofficial free endpoint: needs internet, may stop working, and sends the message text to Google. Installing the Windows voice is the reliable fix.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="primary grow" id="speak">▶ Speak</button>
+        <button class="danger" id="stop">■ Stop</button>
+        <button id="repeat" aria-pressed="false">🔁 Repeat: Off</button>
+        <div class="row"><label for="gap" style="margin:0">every</label>
+          <input type="number" id="gap" value="60" min="5" max="3600" style="width:84px"><span class="note" style="margin:0">sec</span></div>
+      </div>
+      <p class="note">Speech comes out of this device's audio output. Pair your Bluetooth speaker (or plug the AUX cable) to this device, then press Speak.</p>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section>
+      <h2>Daily schedule</h2>
+      <div class="row">
+        <input type="time" id="stime" class="grow" value="10:00">
+        <input type="text" id="smsg" class="grow" placeholder="Message at that time">
+        <button id="sadd">Add</button>
+      </div>
+      <table id="stable" style="margin-top:10px"></table>
+      <div class="row" style="margin-top:12px">
+        <button id="sToggle" aria-pressed="false">⏰ Schedule: Off</button>
+      </div>
+      <p class="note">Runs only while this page stays open on this device. Browsers need one tap on the page first to allow sound, so press Speak or Start once after opening.</p>
+    </section>
+
+    <!-- ALERT TONES -->
+    <section>
+      <h2>Alert tones</h2>
+      <div class="row">
+        <button data-tone="ding">🔔 Ding-dong</button>
+        <button data-tone="attention">📢 Attention</button>
+        <button data-tone="beep">⚠ Beep</button>
+        <button data-tone="siren">🚨 Siren</button>
+        <button data-tone="test">🔊 Speaker test</button>
+      </div>
+      <p class="note">Generated in the browser, no audio files needed.</p>
+
+      <h2 style="margin-top:20px">Keep device awake</h2>
+      <div class="row">
+        <button id="awake" aria-pressed="false">☀ Keep screen on: Off</button>
+      </div>
+      <p class="note">Stops the screen from sleeping so announcements keep working. On the shop device, use "Add to Home Screen" and leave it plugged in.</p>
+    </section>
+
+    <!-- CAMERA / STREAM -->
+    <section>
+      <h2>Live camera preview</h2>
+      <video id="cam" autoplay playsinline muted></video>
+      <div class="row" style="margin-top:10px">
+        <button id="camStart" class="primary">Start camera</button>
+        <button id="camFlip">Flip</button>
+        <button id="camStop">Stop</button>
+      </div>
+      <p class="note" id="camNote">Camera needs https (Vercel gives you that). Localhost also works.</p>
+    </section>
+
+    <section>
+      <h2>External stream (optional)</h2>
+      <label for="url">HLS link (.m3u8) or MP4/WebM</label>
+      <input type="text" id="url" placeholder="https://…/stream.m3u8">
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="load">Load stream</button>
+        <button id="clear">Clear</button>
+      </div>
+      <video id="stream" controls playsinline style="margin-top:10px"></video>
+      <p class="note">Browsers cannot play the DVR's RTSP address directly. Convert it first (MediaMTX or ffmpeg on a Pi or laptop gives you an HLS link), then paste that link here.</p>
+    </section>
+
+    <!-- RECEIVE -->
+    <section class="span2">
+      <h2>Receive mode (same device / same browser)</h2>
+      <div class="row">
+        <button id="recv" aria-pressed="false">📥 Receive: Off</button>
+        <span class="note" style="margin:0">Open this page in two tabs: one sends, the other (receive on) plays. This links tabs on one device only. Sending between different phones needs a small server, which this static page does not have.</span>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const log=t=>{const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString()+'  '+t;$('log').prepend(d);while($('log').children.length>40)$('log').lastChild.remove();};
+
+/* ---------- presets ---------- */
+const presets=[
+ 'Welcome to our shop. Please ask our staff if you need any help.',
+ 'Our heritage handwoven sarees are on special display today.',
+ 'The shop will close in ten minutes. Please complete your purchases.',
+ 'Thank you for visiting. We hope to see you again.',
+ 'আমাদের দোকানে আপনাকে স্বাগত জানাই।',
+ 'हमारी दुकान में आपका स्वागत है।'
+];
+presets.forEach(p=>{const b=document.createElement('button');b.className='chip';b.textContent=p.length>34?p.slice(0,32)+'…':p;b.title=p;b.onclick=()=>{$('msg').value=p;save()};$('presets').appendChild(b)});
+
+/* ---------- audio / tones ---------- */
+let ctx;
+const ac=()=>{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx};
+function note(f,t0,dur,type='sine',vol=.4){
+  const c=ac(),o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t0);
+  g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol*$('vol').value,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+  o.connect(g).connect(c.destination);o.start(t0);o.stop(t0+dur+.05);
+}
+const tones={
+  ding(){const t=ac().currentTime;note(880,t,.7);note(660,t+.45,.9)},
+  attention(){const t=ac().currentTime;[523,659,784].forEach((f,i)=>note(f,t+i*.18,.5,'triangle'))},
+  beep(){const t=ac().currentTime;for(let i=0;i<3;i++)note(1000,t+i*.3,.18,'square',.25)},
+  siren(){const c=ac(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sawtooth';
+    for(let i=0;i<4;i++){o.frequency.linearRampToValueAtTime(900,t+i*.8+.4);o.frequency.linearRampToValueAtTime(500,t+i*.8+.8)}
+    g.gain.value=.25*$('vol').value;o.connect(g).connect(c.destination);o.start(t);o.stop(t+3.3)},
+  test(){const t=ac().currentTime;[262,330,392,523].forEach((f,i)=>note(f,t+i*.25,.4))}
+};
+document.querySelectorAll('[data-tone]').forEach(b=>b.onclick=()=>tones[b.dataset.tone]());
+
+/* ---------- speech ---------- */
+const synth=window.speechSynthesis;
+let voices=[];
+function loadVoices(){
+  if(!synth)return;
+  voices=synth.getVoices().sort((a,b)=>a.lang.localeCompare(b.lang));
+  const cur=store.get('voice','');
+  $('voice').innerHTML='<option value="">Auto (by message language)</option>'+voices.map((v,i)=>`<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`).join('');
+  $('voice').value=cur;
+  const has=l=>voices.some(v=>v.lang.toLowerCase().startsWith(l));
+  $('voiceStatus').textContent='Voices on this device: '+voices.length+' | Hindi: '+(has('hi')?'yes':'MISSING')+' | Bengali: '+(has('bn')?'yes':'MISSING')+(has('hi')&&has('bn')?'':'  (Windows: Settings > Time & language > Speech > Add voices)');
+}
+if(synth){loadVoices();synth.onvoiceschanged=loadVoices}
+
+function detectLang(s){
+  if(/[ঀ-৿]/.test(s))return 'bn';
+  if(/[ऀ-ॿ]/.test(s))return 'hi';
+  return 'en';
+}
+function pickVoice(text){
+  const sel=$('voice').value;
+  if(sel)return voices.find(v=>v.voiceURI===sel);
+  const l=detectLang(text);
+  return voices.find(v=>v.lang.toLowerCase().startsWith(l))||voices.find(v=>v.lang.toLowerCase().startsWith('en-in'))||null;
+}
+function speakNow(text,done){
+  text=(text||'').trim();
+  if(!text){done&&done();return}
+  if(!synth){log('This browser has no speech support');done&&done();return}
+  synth.cancel();
+  const go=()=>{
+    const l=detectLang(text);
+    if(l!=='en'&&!pickVoice(text)){
+      if($('online').checked){onlineSpeak(text,l,done);return}
+      log('No '+(l==='bn'?'Bengali':'Hindi')+' voice on this device. Install it in Windows or tick "Use online voice".');
+      alert_('No '+(l==='bn'?'Bengali':'Hindi')+' voice installed on this device');done&&done();return;
+    }
+    const u=new SpeechSynthesisUtterance(text);
+    const v=pickVoice(text);if(v){u.voice=v;u.lang=v.lang}
+    else u.lang={bn:'bn-IN',hi:'hi-IN',en:'en-IN'}[detectLang(text)];
+    u.volume=+$('vol').value;u.rate=+$('rate').value;u.pitch=+$('pitch').value;
+    u.onstart=()=>setSpeaking(true);
+    u.onend=u.onerror=()=>{setSpeaking(false);done&&done()};
+    synth.speak(u);
+    log('Speaking: '+text.slice(0,60));
+  };
+  const c=$('chime').value;
+  if(c==='none')go();else{tones[c==='ding'?'ding':'attention']();setTimeout(go,c==='ding'?1100:800)}
+}
+function setSpeaking(on){const p=$('pSpeak');p.textContent=on?'Speaking…':'Idle';p.classList.toggle('on',on)}
+
+function alert_(m){const p=$('pSpeak');p.textContent=m;setTimeout(()=>setSpeaking(false),4000)}
+function onlineSpeak(text,lang,done){
+  const parts=text.match(/[^.।!?]+[.।!?]?/g)||[text],chunks=[];
+  let cur='';parts.forEach(x=>{if((cur+x).length>180){cur&&chunks.push(cur);cur=x}else cur+=x});cur&&chunks.push(cur);
+  let i=0;setSpeaking(true);log('Online voice ('+lang+')');
+  const next=()=>{
+    if(i>=chunks.length){setSpeaking(false);done&&done();return}
+    const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+lang+'&q='+encodeURIComponent(chunks[i++].trim()));
+    a.volume=+$('vol').value;a.playbackRate=Math.min(1.5,Math.max(.6,+$('rate').value));
+    a.onended=next;a.onerror=()=>{log('Online voice failed (blocked or offline)');setSpeaking(false);done&&done()};
+    a.play().catch(()=>{log('Online voice blocked');setSpeaking(false);done&&done()});
+  };next();
+}
+let repeatOn=false,repeatTimer=null;
+function stopAll(){repeatOn=false;clearTimeout(repeatTimer);synth&&synth.cancel();setSpeaking(false);setRepeatUI()}
+function setRepeatUI(){$('repeat').setAttribute('aria-pressed',repeatOn);$('repeat').textContent='🔁 Repeat: '+(repeatOn?'On':'Off')}
+function loop(){
+  if(!repeatOn)return;
+  speakNow($('msg').value,()=>{if(repeatOn)repeatTimer=setTimeout(loop,Math.max(5,+$('gap').value||60)*1000)});
+}
+$('speak').onclick=()=>{ac();if(repeatOn){clearTimeout(repeatTimer);loop()}else speakNow($('msg').value)};
+$('stop').onclick=stopAll;
+$('repeat').onclick=()=>{ac();repeatOn=!repeatOn;setRepeatUI();if(repeatOn)loop();else{clearTimeout(repeatTimer)}};
+
+/* ---------- settings persistence ---------- */
+const fields=['msg','vol','rate','pitch','chime','gap'];
+function save(){fields.forEach(f=>store.set(f,$(f).value));store.set('voice',$('voice').value)}
+fields.forEach(f=>{const v=store.get(f,null);if(v!==null)$(f).value=v;$(f).addEventListener('input',()=>{save();labels()})});
+$('voice').addEventListener('change',save);
+$('online').checked=store.get('online',false);$('online').onchange=()=>store.set('online',$('online').checked);
+function labels(){$('volV').textContent=Math.round($('vol').value*100)+'%';$('rateV').textContent=$('rate').value+'×';$('pitchV').textContent=$('pitch').value}
+labels();
+
+/* ---------- schedule ---------- */
+let sched=store.get('sched',[]),schedOn=false,lastFired={};
+function renderSched(){
+  const t=$('stable');t.innerHTML='';
+  if(!sched.length){t.innerHTML='<tr><td class="note">No scheduled announcements yet.</td></tr>';return}
+  sched.sort((a,b)=>a.t.localeCompare(b.t)).forEach((s,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="t"></td><td></td><td style="width:50px"><button class="ghost" aria-label="Remove">✕</button></td>`;
+    tr.children[0].textContent=s.t;tr.children[1].textContent=s.m;
+    tr.querySelector('button').onclick=()=>{sched.splice(i,1);store.set('sched',sched);renderSched()};
+    t.appendChild(tr);
+  });
+}
+$('sadd').onclick=()=>{
+  const t=$('stime').value,m=$('smsg').value.trim()||$('msg').value.trim();
+  if(!t||!m)return;
+  sched.push({t,m});store.set('sched',sched);$('smsg').value='';renderSched();
+};
+$('sToggle').onclick=()=>{
+  ac();schedOn=!schedOn;
+  $('sToggle').setAttribute('aria-pressed',schedOn);$('sToggle').textContent='⏰ Schedule: '+(schedOn?'On':'Off');
+  $('pSched').textContent='Schedule: '+(schedOn?'on':'off');$('pSched').classList.toggle('on',schedOn);
+};
+setInterval(()=>{
+  if(!schedOn)return;
+  const d=new Date(),hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),key=d.toDateString()+hm;
+  sched.forEach(s=>{if(s.t===hm&&lastFired[s.t+s.m]!==key){lastFired[s.t+s.m]=key;log('Scheduled '+hm);speakNow(s.m)}});
+},10000);
+renderSched();
+
+/* ---------- wake lock ---------- */
+let wl=null,awakeOn=false;
+async function lock(){
+  try{wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{$('pAwake').textContent='Screen: normal';$('pAwake').classList.remove('on')});
+    $('pAwake').textContent='Screen: kept on';$('pAwake').classList.add('on')}
+  catch(e){log('Keep-awake not available here');awakeOn=false;ui()}
+}
+function ui(){$('awake').setAttribute('aria-pressed',awakeOn);$('awake').textContent='☀ Keep screen on: '+(awakeOn?'On':'Off')}
+$('awake').onclick=async()=>{
+  if(!('wakeLock'in navigator)){log('This browser does not support keep-awake');return}
+  awakeOn=!awakeOn;ui();
+  if(awakeOn)await lock();else{wl&&wl.release();wl=null}
+};
+document.addEventListener('visibilitychange',()=>{if(awakeOn&&document.visibilityState==='visible')lock()});
+
+/* ---------- camera ---------- */
+let camStream=null,facing='environment';
+async function camStart(){
+  camStop();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('camNote').textContent='Camera not available. Open this page over https.';return}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});
+    $('cam').srcObject=camStream;$('camNote').textContent='Camera on (preview only, nothing is recorded or sent).';
+  }catch(e){$('camNote').textContent='Camera blocked: '+e.name+'. Allow it in the browser address bar.'}
+}
+function camStop(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;$('cam').srcObject=null}}
+$('camStart').onclick=camStart;
+$('camStop').onclick=camStop;
+$('camFlip').onclick=()=>{facing=facing==='user'?'environment':'user';if(camStream)camStart()};
+
+/* ---------- external stream ---------- */
+let hls=null;
+function loadHls(cb){
+  if(window.Hls)return cb();
+  const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js';s.onload=cb;
+  s.onerror=()=>log('Could not load HLS player (offline?)');document.head.appendChild(s);
+}
+$('load').onclick=()=>{
+  const url=$('url').value.trim();if(!url)return;
+  const v=$('stream');
+  if(hls){hls.destroy();hls=null}
+  if(/rtsp:/i.test(url)){log('RTSP cannot play in a browser. Convert to HLS first.');return}
+  if(/\.m3u8/i.test(url)&&!v.canPlayType('application/vnd.apple.mpegurl')){
+    loadHls(()=>{if(window.Hls&&Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(v);v.play().catch(()=>{})}else log('HLS not supported here')});
+  }else{v.src=url;v.play().catch(()=>{})}
+};
+$('clear').onclick=()=>{if(hls){hls.destroy();hls=null}const v=$('stream');v.pause();v.removeAttribute('src');v.load();$('url').value=''};
+
+/* ---------- receive mode (same browser, tab to tab) ---------- */
+let bc=null,recvOn=false;
+try{bc=new BroadcastChannel('shop-broadcast')}catch(e){}
+if(bc)bc.onmessage=e=>{
+  if(!recvOn)return;
+  const d=e.data||{};
+  if(d.type==='speak'){log('Received announcement');speakNow(d.text)}
+  if(d.type==='tone'&&tones[d.name]){log('Received tone');tones[d.name]()}
+  if(d.type==='stop')stopAll();
+};
+$('recv').onclick=()=>{
+  if(!bc){log('Receive mode not supported in this browser');return}
+  ac();recvOn=!recvOn;$('recv').setAttribute('aria-pressed',recvOn);$('recv').textContent='📥 Receive: '+(recvOn?'On':'Off');
+};
+// sender tabs also mirror what they do to listeners
+const _speak=$('speak').onclick;
+$('speak').addEventListener('click',()=>{bc&&bc.postMessage({type:'speak',text:$('msg').value})});
+$('stop').addEventListener('click',()=>{bc&&bc.postMessage({type:'stop'})});
+document.querySelectorAll('[data-tone]').forEach(b=>b.addEventListener('click',()=>{bc&&bc.postMessage({type:'tone',name:b.dataset.tone})}));
+
+/* ---------- misc ---------- */
+if('serviceWorker'in navigator&&false){} // no offline cache needed
+window.addEventListener('beforeunload',()=>{synth&&synth.cancel();camStop()});
+})();
+</script>
+</body>
+</html>
