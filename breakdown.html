@@ -145,7 +145,57 @@ html.night{filter:invert(.92) hue-rotate(180deg);background:#fff}
 html.night img,html.night video{filter:invert(1) hue-rotate(180deg)}
 </style>
 <span id="nsw" role="switch" aria-checked="false" aria-label="night mode">&#9680; naughty switch</span>
-<script>document.getElementById('nsw').addEventListener('click',function(){var on=document.documentElement.classList.toggle('night');this.setAttribute('aria-checked',on)})</script>
+<template id="alt">
+<!-- WRITE YOUR TEXT BETWEEN THE TAGS BELOW. Leave a slot empty to keep the original text. -->
+<!-- heading -->
+<h1></h1>
+<!-- intro -->
+<p class="standfirst"></p>
+<!-- card 1 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- card 2 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- card 3 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- card 4 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- card 5 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- card 6 -->
+<article>
+<h3></h3>
+<p></p>
+<div class="note"></div>
+</article>
+<!-- pull quote -->
+<p class="pull"></p>
+</template>
+<script>
+(function(){var s=document.getElementById('nsw'),t=document.getElementById('alt'),on=false,orig=[];
+function targets(){var a=[document.querySelector('h1'),document.querySelector('.standfirst')];document.querySelectorAll('article.card').forEach(function(x){a.push(x.querySelector('h3'),x.querySelector('p'),x.querySelector('.note'))});a.push(document.querySelector('.pull'));return a}
+function alts(){var d=t.content,a=[d.querySelector('h1'),d.querySelector('.standfirst')];d.querySelectorAll('article').forEach(function(x){a.push(x.querySelector('h3'),x.querySelector('p'),x.querySelector('.note'))});a.push(d.querySelector('.pull'));return a}
+s.addEventListener('click',function(){on=!on;document.documentElement.classList.toggle('night',on);s.setAttribute('aria-checked',on);var T=targets(),A=alts();T.forEach(function(el,i){if(!el)return;if(on){orig[i]=el.innerHTML;var v=A[i]&&A[i].innerHTML.trim();if(v)el.innerHTML=v}else if(orig[i]!==undefined){el.innerHTML=orig[i]}})})})();
+</script>
 
 </body>
 </html>
