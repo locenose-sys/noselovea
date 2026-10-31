@@ -137,6 +137,15 @@ h1 em{font-style:italic; color:var(--teal)}
     Numbers on the plates match the numbered notes.
   </div>
 </div>
+<style>
+#nsw{display:block;width:max-content;margin:6px auto 40px;padding:8px 16px;font:11px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:transparent;background:transparent;border:0;cursor:default;user-select:text;-webkit-user-select:text;outline:none}
+#nsw::selection{background:#0d6b6b;color:#fdfbf6}
+#nsw::-moz-selection{background:#0d6b6b;color:#fdfbf6}
+html.night{filter:invert(.92) hue-rotate(180deg);background:#fff}
+html.night img,html.night video{filter:invert(1) hue-rotate(180deg)}
+</style>
+<span id="nsw" role="switch" aria-checked="false" aria-label="night mode">&#9680; naughty switch</span>
+<script>document.getElementById('nsw').addEventListener('click',function(){var on=document.documentElement.classList.toggle('night');this.setAttribute('aria-checked',on)})</script>
 
 </body>
 </html>
